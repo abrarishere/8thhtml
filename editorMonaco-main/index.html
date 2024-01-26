@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced VS Code</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #editor {
+      flex: 1;
+      height: 100%;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #jsOutput {
+      width: 100%;
+      flex: 1;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="editor"></div>
+  <iframe id="jsOutput"></iframe>
+  <script src="https://unpkg.com/monaco-editor/min/vs/loader.js"></script>
+
+<script>
+  let editor;
+
+  require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor/min/vs' } });
+  require(['vs/editor/editor.main'], () => {
+    // Register HTML language
+    monaco.languages.register({
+      id: 'html',
+      extensions: ['.html'],
+      aliases: ['HTML', 'html'],
+    });
+
+    // Define HTML theme
+    monaco.editor.defineTheme('htmlTheme', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        { token: 'tag', foreground: '569CD6' },
+        { token: 'comment', foreground: '888888' },
+      ],
+      colors: {
+        'editor.foreground': '#FFFFFF',
+      },
+    });
+
+    // Enable Emmet with suggestions, tab completion, and abbreviations
+    monaco.languages.html.htmlDefaults.setOptions({
+      suggest: {
+        emmetSuggestions: true,
+        snippetsPreventQuickSuggestions: false,
+      },
+    });
+
+    // Create the editor
+    editor = monaco.editor.create(document.getElementById('editor'), {
+      value: `<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Your Page Title</title>\n</head>\n<body>\n  <!-- Happy coding! -->\n</body>\n</html>`,
+      language: 'html',
+      theme: 'htmlTheme',
+      fontSize: 14,
+      automaticLayout: true,
+      scrollbar: {
+        useShadows: false,
+        verticalScrollbarSize: 5,
+        horizontalScrollbarSize: 5,
+        arrowSize: 8,
+      },
+      minimap: {
+        enabled: true,
+      },
+      wordWrap: 'on',
+      wrappingIndent: 'same',
+    });
+
+    // Run code on model content change
+    editor.onDidChangeModelContent(() => runCode());
+  });
+
+  // Run code function
+  function runCode() {
+    const htmlCode = editor.getValue();
+    const iframe = document.getElementById('jsOutput');
+    iframe.srcdoc = htmlCode;
+  }
+
+  // Command Palette with keybindings
+  document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey && event.key === 'Space') {
+      // Trigger command palette
+      const command = prompt('Command Palette: (e.g., format, rename)');
+      if (command) {
+        executeCommand(command);
+      }
+    }
+  });
+
+  // Execute command function
+  function executeCommand(command) {
+    switch (command.toLowerCase()) {
+      case 'format':
+        editor.getAction('editor.action.formatDocument').run();
+        break;
+      case 'rename':
+        editor.getAction('editor.action.rename').run();
+        break;
+      default:
+        alert('Command not recognized.');
+    }
+  }
+
+  // Prevent default touchstart event
+  document.addEventListener('touchstart', function (event) {
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+  }, { passive: false });
+
+</script>
+
+  
+</body>
+</html>
